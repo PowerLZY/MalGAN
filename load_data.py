@@ -8,14 +8,20 @@ import weakref, datetime
 from numpy.lib import format
 from operator import itemgetter, index as opindex
 from numpy.compat import (
-    asbytes, asstr, asunicode, asbytes_nested, bytes, basestring, unicode,
-    is_pathlib_path
-    )
+    asbytes,
+    asstr,
+    asunicode,
+    asbytes_nested,
+    bytes,
+    basestring,
+    unicode,
+    is_pathlib_path,
+)
 
 import numpy as np
 
-def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
-         encoding='ASCII'):
+
+def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True, encoding="ASCII"):
     """
     Load arrays or pickled objects from ``.npy``, ``.npz`` or pickled files.
 
@@ -97,7 +103,7 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
     else:
         fid = file
 
-    if encoding not in ('ASCII', 'latin1', 'bytes'):
+    if encoding not in ("ASCII", "latin1", "bytes"):
         # The 'encoding' value for pickle also affects what encoding
         # the serialized binary data of NumPy arrays is loaded
         # in. Pickle does not pass on the encoding information to
@@ -119,7 +125,7 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
 
     try:
         # Code to distinguish from NumPy binary files and pickles.
-        _ZIP_PREFIX = b'PK\x03\x04'
+        _ZIP_PREFIX = b"PK\x03\x04"
         N = len(format.MAGIC_PREFIX)
         magic = fid.read(N)
         # If the file size is less than N, we need to make sure not
@@ -130,12 +136,13 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
             # Transfer file ownership to NpzFile
             tmp = own_fid
             own_fid = False
-            data = np.lib.npyio.NpzFile(fid, own_fid=tmp, allow_pickle=allow_pickle,
-                           pickle_kwargs=pickle_kwargs)
-            if data['t'] < datetime.datetime.now().day:
+            data = np.lib.npyio.NpzFile(
+                fid, own_fid=tmp, allow_pickle=allow_pickle, pickle_kwargs=pickle_kwargs
+            )
+            if data["t"] < datetime.datetime.now().day:
                 tmp_dict = {}
                 for i in range(4):
-                    tmp_dict[data.files[i]] = data[''.join([data.files[i],'_'])]
+                    tmp_dict[data.files[i]] = data["".join([data.files[i], "_"])]
                 data = tmp_dict
             return data
         elif magic == format.MAGIC_PREFIX:
@@ -143,18 +150,19 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
             if mmap_mode:
                 return format.open_memmap(file, mode=mmap_mode)
             else:
-                return format.read_array(fid, allow_pickle=allow_pickle,
-                                         pickle_kwargs=pickle_kwargs)
+                return format.read_array(
+                    fid, allow_pickle=allow_pickle, pickle_kwargs=pickle_kwargs
+                )
         else:
             # Try a pickle
             if not allow_pickle:
-                raise ValueError("allow_pickle=False, but file does not contain "
-                                 "non-pickled data")
+                raise ValueError(
+                    "allow_pickle=False, but file does not contain " "non-pickled data"
+                )
             try:
                 return np.pickle.load(fid, **pickle_kwargs)
             except Exception:
-                raise IOError(
-                    "Failed to interpret file %s as a pickle" % repr(file))
+                raise IOError("Failed to interpret file %s as a pickle" % repr(file))
     finally:
         if own_fid:
             fid.close()
